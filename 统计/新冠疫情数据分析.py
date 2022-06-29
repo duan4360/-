@@ -83,7 +83,7 @@ def get_data_to_csv():#获取数据
                 , ['国家', '日期', '人类发展指数']]
     print(temp.loc[temp.loc[:,'国家']=='China',['国家','人类发展指数']])
 
-def GDP_and_humanity_num():  #GDP与人类发展指数
+def GDP_and_humanity_num():  #人均GDP与人类发展指数
     df = pd.read_csv("D:\综合课程设计Ⅲ\全球新冠肺炎疫情量化数据.csv", encoding='GBK', error_bad_lines=False)
     temp = df.loc[(df.loc[:, "日期"] == '2022/3/11') & ((df.loc[:, "所属洲"].isna() == False)) & (
     (df.loc[:, "国家"]))
@@ -92,7 +92,9 @@ def GDP_and_humanity_num():  #GDP与人类发展指数
     for i in main_country:
         tdf=temp.loc[temp.loc[:,"国家"]==i,['国家', '日期','GDP（购买力平价计算）','人类发展指数']]
         l=l.append(tdf)
-    print(l)
+    tl=l[['国家','GDP（购买力平价计算）']]
+    tl.sort_values(by='GDP（购买力平价计算）', ascending=False)
+    pie_chart(tl['GDP（购买力平价计算）'].tolist(),tl['国家'].tolist(),title='主要国家人均GDP对比')
 
 def government_response():  #政府响应严格指数
     df = pd.read_csv("D:\综合课程设计Ⅲ\全球新冠肺炎疫情量化数据.csv", encoding='GBK', error_bad_lines=False)
@@ -111,12 +113,83 @@ def government_response():  #政府响应严格指数
             tdf['政府响应严格指数']=t['政府响应严格指数'].mean()  # 每列的平均填充缺失值
             l=l.append(tdf)
     l.sort_values(by='政府响应严格指数', ascending=False)
+    #pie_chart(l['政府响应严格指数'].tolist(),l['国家'].tolist())
+    bar_char(l['政府响应严格指数'].tolist(),l['国家'].tolist(),title="主要国家新冠期间政府响应严格指数",xl='国家',yl="政府响应指数")
     print(l)
 
+def the_main_countries_GDP_changes(): #主要国家2013-2020年GDP变化
+    column=['Country']
+    column.extend([str(i) for i in range(2013,2021)])
+    df = pd.read_csv("D:\综合课程设计Ⅲ\WEOOct2021all.csv", encoding='GBK', error_bad_lines=False)
+    df=df.loc[(df.loc[:, "Country"].isin(main_country)) & ((df.loc[:, "WEO Subject Code"]=='NGDPD')),
+                  column]
+    for i in [j for j in range(2013,2021)]:
+        df.loc[:,str(i)]=[float(j.replace(',','')) for j in df[str(i)].tolist()]
+    print(df)
+    y,country=[],[]
+    for i in main_country:
+        temp=df.loc[df.loc[:, "Country"]==i,[str(i) for i in range(2013,2021)]]
+        temp=temp.values.tolist()
+        if len(temp)>0:
+            country.append(i)
+            y.append(temp[0])
+    print(y)
+    broken_line_chart(x=[i for i in range(2013,2021)], y=y, label=country, title='2013-2020各国GDP变化图', xl='年份（年）', yl='GDP（亿美元）')
+
+def mouth_muffle_importandexport():   #中国口罩进出口
+    pass
+def pie_chart(x,labels,title): #饼图
+    matplotlib.rcParams["font.family"] = "SimHei"
+    plt.figure(figsize=(8, 6))
+    # 建立轴的大小
+    explode = [0.05 for i in range(len(x))]
+    # 这个是控制分离的距离的，默认饼图不分离
+    plt.pie(x, labels=labels, explode=explode, startangle=60, autopct='%1.1f%%')
+    # autopct在图中显示比例值，注意值的格式
+    plt.title(title)
+    plt.show()
+
+def bar_char(y,label,title,xl,yl): #带平均值的柱状图
+    import numpy as np
+    matplotlib.rcParams["font.family"] = "SimHei"
+    plt.figure(figsize=(12, 8))
+    x_width = range(0, len(y))
+    color = [ 'red','yellow','green', 'blue', 'pink', 'black', 'orange', 'purple', 'peru', 'gray', 'tan', 'bisque',
+             'skyblue','gold','maroon','silver','yellowgreen','mediumorchid','khaki','darkred']
+    c = np.mean(y)
+    for i in x_width:
+        rects=plt.bar(i, y[i], lw=0.5, fc=color[i],width=0.4, label=label[i]) #hatch="/",
+        for rect in rects:
+            plt.text(rect.get_x() + rect.get_width() / 2, rect.get_height(), round(y[i],2), size=10, ha='center', va='bottom')
+    # plt.plot(x, y, linewidth=1, color="orange", marker="*")
+    plt.xlabel(xl)
+    plt.ylabel(yl)
+    plt.xticks(range(len(label)), range(1, len(label) + 1))
+    plt.title(title)
+    plt.axhline(y=c, color="red",linestyle='--')
+    plt.legend()
+    plt.show()
+
+def broken_line_chart(x,y,label,title,xl,yl): #折线图
+    matplotlib.rcParams["font.family"] = "SimHei"
+    plt.figure(figsize=(9, 8))
+    color = ['red', 'yellow', 'green', 'blue', 'pink', 'black', 'orange', 'purple', 'peru', 'gray', 'tan', 'bisque',
+             'skyblue', 'gold', 'maroon', 'silver', 'yellowgreen', 'mediumorchid', 'khaki', 'darkred']
+
+    for i in range(len(label)):
+        plt.plot(x, y[i], marker='*',linewidth=1, linestyle='--', color=color[i])
+    #plt.legend(label,loc="upper left")
+    plt.legend(label,bbox_to_anchor=(0.96, 0.45), loc=3, borderaxespad=0)
+    plt.title(title)
+    plt.xlabel(xl)
+    plt.ylabel(yl)
+    plt.show()
 ##################################################################################################
 if __name__=='__main__':
     #state_disease_num()
     #get_data_to_csv()
     GDP_and_humanity_num()
     government_response()
+    the_main_countries_GDP_changes()
+
 
