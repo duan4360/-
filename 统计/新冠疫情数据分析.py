@@ -79,7 +79,7 @@ def state_disease_num():  #大洲疾病数目统计
 
 def get_data_to_csv():#获取数据
     df = pd.read_csv("D:\综合课程设计Ⅲ\全球新冠肺炎疫情量化数据.csv", encoding='GBK', error_bad_lines=False)
-    temp=df.loc[(df.loc[:,"日期"]=='2022/3/11')&((df.loc[:,"所属洲"].isna()==False))&((df.loc[:,"人类发展指数"].isna()==False))
+    temp=df.loc[(df.loc[:,"日期"]=='2022/3/11')&(df.loc[:,"所属洲"].isna()==False)&(df.loc[:,"人类发展指数"].isna()==False)
                 , ['国家', '日期', '人类发展指数']]
     print(temp.loc[temp.loc[:,'国家']=='China',['国家','人类发展指数']])
 
@@ -93,8 +93,30 @@ def GDP_and_humanity_num():  #人均GDP与人类发展指数
         tdf=temp.loc[temp.loc[:,"国家"]==i,['国家', '日期','GDP（购买力平价计算）','人类发展指数']]
         l=l.append(tdf)
     tl=l[['国家','GDP（购买力平价计算）']]
-    tl.sort_values(by='GDP（购买力平价计算）', ascending=False)
+    tl=tl.sort_values(by='GDP（购买力平价计算）', ascending=False)
+    print(tl)
     pie_chart(tl['GDP（购买力平价计算）'].tolist(),tl['国家'].tolist(),title='主要国家人均GDP对比')
+
+    tl=l[['国家','人类发展指数']]
+    print(tl)
+    x=tl['国家'].tolist()
+    y=[float(i) for i in tl['人类发展指数'].tolist()]
+    bar_char(y, x, '主要国家人类发展指数', xl='国家', yl='发展指数')
+    '''matplotlib.rcParams["font.family"] = "SimHei"
+    plt.figure(figsize=(12, 6))
+    x_width = range(0, len(x))
+    color = ['red', 'yellow', 'green', 'blue', 'pink', 'black', 'orange', 'purple', 'peru', 'gray', 'tan', 'bisque',
+             'skyblue', 'gold', 'maroon', 'silver', 'yellowgreen', 'mediumorchid', 'khaki', 'darkred']
+    for i in x_width:
+        plt.bar(i, y[i], lw=0.5, fc=color[i], width=0.4)
+    # plt.plot(x, y, linewidth=1, color="orange", marker="*")
+    plt.xlabel("国家")
+    plt.ylabel("人类发展指数")
+    plt.xticks(range(len(x)), range(1, len(x) + 1))
+    plt.title("主要国家人类发展指数对比")
+    plt.legend()
+    plt.show()'''
+
 
 def government_response():  #政府响应严格指数
     df = pd.read_csv("D:\综合课程设计Ⅲ\全球新冠肺炎疫情量化数据.csv", encoding='GBK', error_bad_lines=False)
@@ -136,8 +158,126 @@ def the_main_countries_GDP_changes(): #主要国家2013-2020年GDP变化
     print(y)
     broken_line_chart(x=[i for i in range(2013,2021)], y=y, label=country, title='2013-2020各国GDP变化图', xl='年份（年）', yl='GDP（亿美元）')
 
-def mouth_muffle_importandexport():   #中国口罩进出口
-    pass
+def unemployment_rate():   #主要国家近几年失业率
+        column = ['Country']
+        column.extend([str(i) for i in range(2016, 2023)])
+        df = pd.read_csv("D:\综合课程设计Ⅲ\WEOOct2021all.csv", encoding='GBK', error_bad_lines=False)
+        df = df.loc[(df.loc[:, "Country"].isin(main_country)) & (df.loc[:, "Subject Descriptor"] == 'Unemployment rate')
+        &(df.loc[:, "2022"].isna()==False),column]
+        for i in [j for j in range(2016, 2023)]:
+            df.loc[:, str(i)] = [float(j) for j in df[str(i)].tolist()]
+        print(df)
+        heatmap(x_ticks=[str(i) for i in range(2016, 2023)], y_ticks=df['Country'], df=df[[str(i) for i in range(2016, 2023)]], title='2016-2022各国失业率变化图', xl='年份（年）',
+                          yl='失业率（%）')
+
+def china_importandexport():  #中国近几年进出口
+    from dateutil.parser import parse as ps
+    bt = ps("2019-1-1")
+    et = ps("2022-1-1")
+    df = pd.read_csv("D:\综合课程设计Ⅲ\Import_Export.csv", encoding='GBK', error_bad_lines=False)
+    df['Month']=pd.to_datetime(df['Month'], format="%Y年%m月")
+    df = df.loc[(df.loc[:, "Month"]<=et)&(df.loc[:, "Month"]>=bt), ['Month','Total_Export','Total_Export_YOY','Total_Import','Total_Import_YOY']]
+    '''for i in [j for j in range(2016, 2023)]:
+        df.loc[:, str(i)] = [float(j) for j in df[str(i)].tolist()]'''
+    df=df.sort_values(by='Month', ascending=True)
+    print(df)
+    x=[ str(i)[2:7] for i in df['Month'].tolist()]
+    y1=[int(i) for i in df['Total_Export'].tolist()]
+    y2=[ float(i[:-1]) for i in df['Total_Export_YOY'].tolist()]
+    y3=[int(i) for i in df['Total_Import'].tolist()]
+    y4=[ float(i[:-1]) for i in df['Total_Import_YOY'].tolist()]
+
+    plt.rcParams['font.sans-serif']=['Microsoft YaHei']
+    plt.figure(figsize=(14, 9))
+    ax1 = plt.subplot2grid((2, 1), (0, 0), colspan=1, rowspan=1)
+    # 第一个括号的（2,2）表示将画布分割成2*2，（0,0）表示该子图从位置（0,0）开始，
+    # colspan和rowspan分别表示子图占用的行长度和列长度
+    ax1.plot(x, y1)
+    ax1.set_ylabel("总出口额（亿元）")
+    ax1.set_title("2019到2022每月出口额")
+    ax1.grid()
+    plt.xticks(rotation=45, fontsize=9)
+
+    ax2 = plt.subplot2grid((2, 1), (1, 0), colspan=1, rowspan=1)
+    ax2.plot(x, y2)
+    ax2.set_ylabel("总出口额增长率（%）")
+    ax2.set_title("2019到2022每月出口额与同期相比增长率")
+    ax2.grid()
+    plt.xticks(rotation=45, fontsize=9)
+    plt.show()
+
+    plt.figure(figsize=(14, 9))
+    ax3 = plt.subplot2grid((2, 1), (0, 0), colspan=2, rowspan=1)
+    ax3.plot(x, y3)
+    print('ok')
+    ax3.set_ylabel("总进口额（亿元）")
+    ax3.set_title("2019到2022每月进口额")
+    ax3.grid()
+    plt.xticks(rotation=45, fontsize=9)
+
+    ax4 = plt.subplot2grid((2, 1), (1, 0), colspan=2, rowspan=1)
+    ax4.plot(x, y4)
+    ax4.set_ylabel("总进口额增长率（%）")
+    ax4.set_title("2019到2022每月进口额与同期相比增长率")
+    ax4.grid()
+    plt.xticks(rotation=45, fontsize=9)
+    plt.show()
+    #broken_line_chart()
+
+def china_industrial_add_value():  #中国近两年工业增加值变化率
+    from dateutil.parser import parse as ps
+    bt = ps("2019-1-1")
+    et = ps("2021-12-1")
+    df = pd.read_csv("D:\综合课程设计Ⅲ\Industrial_Added_Value.csv", encoding='GBK', error_bad_lines=False)
+    df['Month'] = pd.to_datetime(df['Month'], format="%Y年%m月")
+    df = df.loc[(df.loc[:, "Month"] <= et) & (df.loc[:, "Month"] >= bt), ['Month', 'Cumulative_Growth']]
+    df = df.sort_values(by='Month', ascending=True)
+    print(df)
+    x = [str(i)[2:7] for i in df['Month'].tolist()]
+    y = [float(i[:-1]) for i in df['Cumulative_Growth'].tolist()]
+    broken_line_chart(x=x, y=[y], label=[], title='2019到2022每月工业产值增长率', xl='年月', yl='增长率（%）')
+
+def export_of_medical_device(): #用雷达图展示中国对各州医疗产品出口额
+    import numpy as np
+
+    # 某学生的课程与成绩
+    state = ['亚洲', '欧洲', '南美洲', '非洲', '大洋洲', '北美洲']
+    export = [297.04, 445.09, 42.5,40.5,21.09, 390.08]
+    dataLength = len(export)  # 数据长度
+    # angles数组把圆周等分为dataLength份
+    angles = np.linspace(0, 2 * np.pi, dataLength, endpoint=False)
+    export.append(export[0])
+    angless = np.append(angles, angles[0])  # 闭合
+    # 绘制雷达图
+    plt.rcParams['font.sans-serif'] = ['SimHei']
+    plt.polar(angless,  # 设置角度
+              export,  # 设置各个角度上的数据
+              'rv--',  # 设置颜色、线型和端点符号
+              linewidth=2)  # 设置线宽
+    # 设置角度网络标签
+    plt.thetagrids(angles * 180 / np.pi, state, fontproperties='simhei', fontsize=10, color='k')
+    # 填充雷达图内部
+    plt.fill(angless, export, facecolor='g', alpha=0.2)
+    plt.title("中国2020年对各洲医疗设备出口额（亿美元）")
+    plt.show()
+
+def heatmap(x_ticks,y_ticks,df,title,xl,yl):  #热力图
+    import seaborn as sns
+    pd.set_option('expand_frame_repr', False)
+    plt.rcParams['font.sans-serif'] = ['SimHei']  # 可以正常显示中文
+    plt.figure(figsize=(9, 6))
+    ax = sns.heatmap(df, annot=True, fmt='.3f', cmap="OrRd", vmax=35, vmin=0, xticklabels=x_ticks,
+                     yticklabels=y_ticks)
+    #  annot=True表示每一个格子显示数字;fmt='.0f'表示保留0位小数，同理fmt='.1f'表示保留一位小数
+    #  camp表示颜色，在另一个博主的文章中讲解的很清晰
+    #  vmax=350, vmin=20表示右侧颜色条的最大最小值，在最大最小值外的颜色将直接以最大或最小值的颜色显示，
+    #  通过此设置就可以解决少数值过大从而使得大部分色块区别不明显的问题
+    #  xticklabels=x_ticks, yticklabels=y_ticks，横纵轴标签
+    ax.set_title(title)  # 图标题
+    ax.set_xlabel(xl)  # x轴标题
+    ax.set_ylabel(yl)  # y轴标题
+    plt.show()
+
 def pie_chart(x,labels,title): #饼图
     matplotlib.rcParams["font.family"] = "SimHei"
     plt.figure(figsize=(8, 6))
@@ -161,35 +301,44 @@ def bar_char(y,label,title,xl,yl): #带平均值的柱状图
         rects=plt.bar(i, y[i], lw=0.5, fc=color[i],width=0.4, label=label[i]) #hatch="/",
         for rect in rects:
             plt.text(rect.get_x() + rect.get_width() / 2, rect.get_height(), round(y[i],2), size=10, ha='center', va='bottom')
-    # plt.plot(x, y, linewidth=1, color="orange", marker="*")
     plt.xlabel(xl)
     plt.ylabel(yl)
-    plt.xticks(range(len(label)), range(1, len(label) + 1))
+    plt.xticks(range(len(label)), label,rotation=30, fontsize=8)
     plt.title(title)
     plt.axhline(y=c, color="red",linestyle='--')
-    plt.legend()
+    #plt.legend()
     plt.show()
 
 def broken_line_chart(x,y,label,title,xl,yl): #折线图
-    matplotlib.rcParams["font.family"] = "SimHei"
+    plt.rcParams['font.sans-serif']=['Microsoft YaHei']
     plt.figure(figsize=(9, 8))
     color = ['red', 'yellow', 'green', 'blue', 'pink', 'black', 'orange', 'purple', 'peru', 'gray', 'tan', 'bisque',
              'skyblue', 'gold', 'maroon', 'silver', 'yellowgreen', 'mediumorchid', 'khaki', 'darkred']
 
-    for i in range(len(label)):
+    for i in range(len(y)):
         plt.plot(x, y[i], marker='*',linewidth=1, linestyle='--', color=color[i])
     #plt.legend(label,loc="upper left")
-    plt.legend(label,bbox_to_anchor=(0.96, 0.45), loc=3, borderaxespad=0)
+    if len(label)!=0:
+        plt.legend(label,bbox_to_anchor=(0.96, 0.45), loc=3, borderaxespad=0)
     plt.title(title)
     plt.xlabel(xl)
     plt.ylabel(yl)
+    plt.xticks(rotation=45, fontsize=8)
     plt.show()
+
 ##################################################################################################
 if __name__=='__main__':
-    #state_disease_num()
+    pass
     #get_data_to_csv()
+    state_disease_num()
     GDP_and_humanity_num()
     government_response()
     the_main_countries_GDP_changes()
+    unemployment_rate()
+    china_importandexport()
+    china_industrial_add_value()
+    export_of_medical_device()
+
+
 
 
